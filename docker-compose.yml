@@ -1,19 +1,44 @@
 version: "3.8"
+
 services:
+  # 🌐 Servei web (PHP + Apache)
   web:
     image: php:8.2-apache
+    container_name: web
     ports:
-      - "8080:80"
+      - "8080:80"               # Exposa el port 8080 del host -> 80 del contenidor
     volumes:
-      - ./public:/var/www/html
+      - ./public:/var/www/html  # Mapeja el codi font local al directori web d'Apache
     depends_on:
-      - db
+      - db                      # S'assegura que la BD estigui en marxa abans d'arrencar
+
+  # 🗄️ Servei de base de dades MySQL
   db:
     image: mysql:8
+    container_name: db
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: demo
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: root      # Contrasenya de root
+      MYSQL_DATABASE: demo           # Nom de la base de dades
+      MYSQL_USER: user               # Usuari per defecte
+      MYSQL_PASSWORD: password       # Contrasenya de l'usuari
     ports:
-      - "3306:3306"
+      - "3306:3306"                  # Permet connexions externes (opcional)
+    volumes:
+      - db_data:/var/lib/mysql       # Desa les dades en volum persistent
+
+  # 🧭 Servei phpMyAdmin per gestionar la BD visualment
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    ports:
+      - "8081:80"                    # Accés via http://localhost:8081
+    environment:
+      PMA_HOST: db                   # Nom del servei MySQL definit a dalt
+      PMA_USER: root
+      PMA_PASSWORD: root
+    depends_on:
+      - db
+
+# 📦 Volum per persistir les dades de MySQL
+volumes:
+  db_data:
